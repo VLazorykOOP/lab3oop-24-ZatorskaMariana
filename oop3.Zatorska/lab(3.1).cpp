@@ -1,117 +1,107 @@
 #include <iostream>
-#include <cmath> // Для використання функцій математичних операцій
-
-using namespace std;
+#include <cmath>
+#include <string>
 
 class Rhombus {
 private:
-    double side;       // Сторона ромба
-    double diagonal1;  // Перша діагональ
-    double diagonal2;  // Друга діагональ
-    string color;      // Колір ромба
+    double side;
+    double diagonal;
+    std::string color;
 
 public:
-    // Конструктор за замовчуванням
-    Rhombus() : side(0), diagonal1(0), diagonal2(0), color("undefined") {}
+    Rhombus() : side(1.0), diagonal(1.0), color("white") {}
 
-    // Конструктор з параметрами
-    Rhombus(double s, double d1, double d2, string c) {
+    Rhombus(double s, double d, const std::string& c) {
         setSide(s);
-        setDiagonals(d1, d2);
+        setDiagonal(d);
         setColor(c);
     }
 
-    // Функція для встановлення значення сторони
     void setSide(double s) {
-        if (s > 0) {
+        if (s > 0)
             side = s;
-        } else {
-            cout << "Помилка: Сторона повинна бути додатною!" << endl;
-            side = 0;
-        }
+        else
+            std::cerr << "Сторона повинна бути більшою за 0.\n";
     }
 
-    // Функція для встановлення значень діагоналей
-    void setDiagonals(double d1, double d2) {
-        if (d1 > 0 && d2 > 0) {
-            diagonal1 = d1;
-            diagonal2 = d2;
-        } else {
-            cout << "Помилка: Діагоналі повинні бути додатними!" << endl;
-            diagonal1 = 0;
-            diagonal2 = 0;
-        }
+    void setDiagonal(double d) {
+        if (d > 0)
+            diagonal = d;
+        else
+            std::cerr << "Діагональ повинна бути більшою за 0.\n";
     }
 
-    // Функція для встановлення кольору
-    void setColor(string c) {
-        color = c;
+    void setColor(const std::string& c) {
+        if (!c.empty())
+            color = c;
+        else
+            std::cerr << "Колір не може бути порожнім.\n";
     }
 
-    // Функція для отримання значення сторони
     double getSide() const {
         return side;
     }
 
-    // Функція для отримання значень діагоналей
-    void getDiagonals(double &d1, double &d2) const {
-        d1 = diagonal1;
-        d2 = diagonal2;
+    double getDiagonal() const {
+        return diagonal;
     }
 
-    // Функція для отримання кольору
-    string getColor() const {
+    std::string getColor() const {
         return color;
     }
 
-    // Функція для обчислення площі ромба
-    double calculateArea() const {
-        return (diagonal1 * diagonal2) / 2;
+    double area() const {
+        double halfDiagonal = diagonal / 2.0;
+        double otherHalf = std::sqrt(side * side - halfDiagonal * halfDiagonal);
+        double d2 = otherHalf * 2.0;
+        return (diagonal * d2) / 2.0;
     }
 
-    // Функція для обчислення периметра ромба
-    double calculatePerimeter() const {
+    double perimeter() const {
         return 4 * side;
     }
 
-    // Функція для виведення інформації про ромб
-    void printDetails() const {
-        cout << "Ромб:\n";
-        cout << "Сторона: " << side << endl;
-        cout << "Діагоналі: " << diagonal1 << " та " << diagonal2 << endl;
-        cout << "Колір: " << color << endl;
-        cout << "Площа: " << calculateArea() << endl;
-        cout << "Периметр: " << calculatePerimeter() << endl;
+    void print() const {
+        std::cout << "\n--- Інформація про ромб ---\n"
+                  << "Сторона: " << side << "\n"
+                  << "Діагональ: " << diagonal << "\n"
+                  << "Колір: " << color << "\n"
+                  << "Площа: " << area() << "\n"
+                  << "Периметр: " << perimeter() << "\n";
     }
 };
 
 int main() {
-    // Створення ромба за допомогою конструктора за замовчуванням
-    Rhombus r1;
-    r1.printDetails();
+    double sideInput, diagonalInput;
+    std::string colorInput;
 
-    // Створення ромба з заданими параметрами
-    Rhombus r2(5, 6, 8, "червоний");
-    r2.printDetails();
+    std::cout << "Введіть сторону ромба: ";
+    std::cin >> sideInput;
 
-    // Тестування встановлення значень за допомогою функцій-членів
-    double side, diag1, diag2;
-    string color;
-    cout << "Введіть сторону ромба: ";
-    cin >> side;
-    cout << "Введіть першу діагональ: ";
-    cin >> diag1;
-    cout << "Введіть другу діагональ: ";
-    cin >> diag2;
-    cout << "Введіть колір ромба: ";
-    cin >> color;
+    while (sideInput <= 0) {
+        std::cout << "Помилка! Сторона повинна бути > 0. Спробуйте ще раз: ";
+        std::cin >> sideInput;
+    }
 
-    // Створення нового ромба з введеними параметрами
-    Rhombus r3;
-    r3.setSide(side);
-    r3.setDiagonals(diag1, diag2);
-    r3.setColor(color);
-    r3.printDetails();
+    std::cout << "Введіть діагональ ромба: ";
+    std::cin >> diagonalInput;
+
+    while (diagonalInput <= 0) {
+        std::cout << "Помилка! Діагональ повинна бути > 0. Спробуйте ще раз: ";
+        std::cin >> diagonalInput;
+    }
+
+    std::cout << "Введіть колір ромба: ";
+    std::cin.ignore(); // очищає вхідний буфер після cin >>
+    std::getline(std::cin, colorInput);
+
+    while (colorInput.empty()) {
+        std::cout << "Помилка! Колір не може бути порожнім. Спробуйте ще раз: ";
+        std::getline(std::cin, colorInput);
+    }
+
+    Rhombus userRhombus(sideInput, diagonalInput, colorInput);
+    userRhombus.print();
 
     return 0;
 }
