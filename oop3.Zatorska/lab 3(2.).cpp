@@ -1,155 +1,173 @@
 #include <iostream>
+#include <cmath>
 
 class Vector {
-public:
+private:
     float x, y, z;
-    int state;  // Стан вектора
-    static int count;  // Лічильник об'єктів класу
+    int state; // 0 - OK, 1 - NULL вказівник, 2 - ділення на 0
+    static int objectCount;
 
-    // Конструктор без параметрів
+public:
+    // --- Конструктори ---
     Vector() : x(0), y(0), z(0), state(0) {
-        count++;
+        objectCount++;
     }
 
-    // Конструктор, що ініціалізує поля значеннями x, y, z
-    Vector(float x_val, float y_val, float z_val) : x(x_val), y(y_val), z(z_val), state(0) {
-        count++;
+    Vector(float value) : x(value), y(value), z(value), state(0) {
+        objectCount++;
     }
 
-    // Конструктор, що приймає вказівник на масив
     Vector(float* arr) {
-        if (arr != nullptr) {
+        if (arr == nullptr) {
+            x = y = z = 0;
+            state = 1;
+        } else {
             x = arr[0];
             y = arr[1];
             z = arr[2];
             state = 0;
-        } else {
-            state = -1;  // Код помилки при передачі nullptr
-            x = y = z = 0;
         }
-        count++;
+        objectCount++;
     }
 
-    // Деструктор з виведенням інформації про стан вектора
+    // --- Деструктор ---
     ~Vector() {
-        std::cout << "Вектор знищений. Стан: " << state << std::endl;
-        count--;
+        std::cout << "Знищення об'єкта Vector. Стан: " << state << std::endl;
+        objectCount--;
     }
 
-    // Функція, яка присвоює значення полям x, y, z
-    void setValues(float newX = 0, float newY = 0, float newZ = 0) {
-        x = newX;
-        y = newY;
-        z = newZ;
-    }
-
-    // Функція, яка повертає значення певного елемента: 1 - x, 2 - y, 3 - z
-    float getValue(int index) const {
-        if (index == 1) return x;
-        if (index == 2) return y;
-        if (index == 3) return z;
-        return 0;
-    }
-
-    // Оператор копіювання
-    Vector(const Vector& v) : x(v.x), y(v.y), z(v.z), state(v.state) {
-        count++;
-    }
-
-    // Оператор присвоєння
-    Vector& operator=(const Vector& v) {
-        if (this != &v) {
-            x = v.x;
-            y = v.y;
-            z = v.z;
-            state = v.state;
+    // --- Сетери координат ---
+    void set(char coord = 'x', float value = 0.0f) {
+        switch (coord) {
+            case 'x': x = value; break;
+            case 'y': y = value; break;
+            case 'z': z = value; break;
+            default: std::cerr << "Невірна координата\n";
         }
-        return *this;
     }
 
-    // Оператор + для додавання векторів
-    Vector operator+(const Vector& v) const {
-        return Vector(x + v.x, y + v.y, z + v.z);
-    }
-
-    // Оператор - для віднімання векторів
-    Vector operator-(const Vector& v) const {
-        return Vector(x - v.x, y - v.y, z - v.z);
-    }
-
-    // Оператор / для ділення на число (тип short)
-    Vector operator/(short int divisor) {
-        if (divisor == 0) {
-            state = -2;  // Код помилки при діленні на 0
-            return *this;  // Не виконуємо ділення
+    // --- Гетери координат ---
+    float get(char coord = 'x') const {
+        switch (coord) {
+            case 'x': return x;
+            case 'y': return y;
+            case 'z': return z;
+            default: std::cerr << "Невірна координата\n"; return 0;
         }
-        return Vector(x / divisor, y / divisor, z / divisor);
     }
 
-    // Векторний добуток
-    Vector crossProduct(const Vector& v) const {
-        float cx = y * v.z - z * v.y;
-        float cy = z * v.x - x * v.z;
-        float cz = x * v.y - y * v.x;
-        return Vector(cx, cy, cz);
+    // --- Функція друку ---
+    void print() const {
+        std::cout << "Vector(" << x << ", " << y << ", " << z << "), Стан: " << state << std::endl;
     }
 
-    // Оператор порівняння <
-    bool operator<(const Vector& v) const {
-        return (x < v.x && y < v.y && z < v.z);
+    // --- Додавання ---
+    Vector add(const Vector& other) const {
+        return Vector(x + other.x, y + other.y, z + other.z);
     }
 
-    // Оператор порівняння ==
-    bool operator==(const Vector& v) const {
-        return (x == v.x && y == v.y && z == v.z);
+    // --- Віднімання ---
+    Vector subtract(const Vector& other) const {
+        return Vector(x - other.x, y - other.y, z - other.z);
     }
 
-    // Функція для виведення вектора
-    void display() const {
-        std::cout << "Вектор(" << x << ", " << y << ", " << z << ", " << state << ")" << std::endl;
+    // --- Векторний добуток ---
+    Vector cross(const Vector& other) const {
+        return Vector(
+            y * other.z - z * other.y,
+            z * other.x - x * other.z,
+            x * other.y - y * other.x
+        );
     }
 
-    // Функція, яка повертає кількість об'єктів цього класу
-    static int getCount() {
-        return count;
+    // --- Ділення на short ---
+    void divide(short value) {
+        if (value == 0) {
+            state = 2;
+            std::cerr << "Помилка: ділення на 0!" << std::endl;
+            return;
+        }
+        x /= value;
+        y /= value;
+        z /= value;
+    }
+
+    // --- Порівняння ---
+    bool isGreater(const Vector& other) const {
+        return magnitude() > other.magnitude();
+    }
+
+    bool isLessOrEqual(const Vector& other) const {
+        return magnitude() <= other.magnitude();
+    }
+
+    // --- Довжина вектора ---
+    float magnitude() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+
+    // --- Кількість об'єктів ---
+    static int getObjectCount() {
+        return objectCount;
+    }
+
+private:
+    Vector(float xVal, float yVal, float zVal) : x(xVal), y(yVal), z(zVal), state(0) {
+        objectCount++;
     }
 };
 
-// Ініціалізація статичної змінної
-int Vector::count = 0;
+// Ініціалізація лічильника об'єктів
+int Vector::objectCount = 0;
 
 int main() {
-    // Тестування всіх можливостей класу
+    std::cout << "Введення даних для вектора:\n";
 
-    // Створення векторів
-    Vector v1(1.0f, 2.0f, 3.0f);
-    Vector v2(4.0f, 5.0f, 6.0f);
-    Vector v3 = v1 + v2;
-    v3.display();
+    float x, y, z;
+    std::cout << "Введіть x: ";
+    std::cin >> x;
+    std::cout << "Введіть y: ";
+    std::cin >> y;
+    std::cout << "Введіть z: ";
+    std::cin >> z;
 
-    // Векторний добуток
-    Vector v4 = v1.crossProduct(v2);
-    v4.display();
+    // Створюємо вектор з введеними значеннями
+    float arr[3] = {x, y, z};
+    Vector userVector(arr);
 
-    // Порівняння
-    std::cout << "v1 < v2: " << (v1 < v2) << std::endl;
-    std::cout << "v1 == v2: " << (v1 == v2) << std::endl;
+    std::cout << "Ваш вектор:\n";
+    userVector.print();
 
-    // Ділення на число
-    Vector v5 = v1 / 2;
-    v5.display();
-    v5 = v1 / 0;  // Ділення на 0, має встановити код помилки
-    v5.display();
+    std::cout << "\nСтворимо ще один вектор (1.0, 2.0, 3.0) для операцій:\n";
+    float refData[3] = {1.0f, 2.0f, 3.0f};
+    Vector refVector(refData);
+    refVector.print();
 
-    // Робота з масивом
-    float arr[] = {7.0f, 8.0f, 9.0f};
-    Vector v6(arr);
-    v6.display();
-    Vector v7(nullptr);  // Передача nullptr, має встановити код помилки
-    v7.display();
+    std::cout << "\nСума векторів:\n";
+    Vector sum = userVector.add(refVector);
+    sum.print();
 
-    // Виведення кількості об'єктів класу
-    std::cout << "Кількість об'єктів класу Vector: " << Vector::getCount() << std::endl;
+    std::cout << "Різниця векторів:\n";
+    Vector diff = userVector.subtract(refVector);
+    diff.print();
+
+    std::cout << "Векторний добуток:\n";
+    Vector cross = userVector.cross(refVector);
+    cross.print();
+
+    std::cout << "Введіть ціле число для ділення: ";
+    short divisor;
+    std::cin >> divisor;
+
+    userVector.divide(divisor);
+    std::cout << "Вектор після ділення:\n";
+    userVector.print();
+
+    std::cout << "\nПорівняння довжин:\n";
+    std::cout << "Ваш вектор > опорного: " << (userVector.isGreater(refVector) ? "Так" : "Ні") << std::endl;
+    std::cout << "Ваш вектор <= опорного: " << (userVector.isLessOrEqual(refVector) ? "Так" : "Ні") << std::endl;
+
+    std::cout << "\nКількість об'єктів: " << Vector::getObjectCount() << std::endl;
 
     return 0;
 }
